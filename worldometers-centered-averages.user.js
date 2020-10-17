@@ -118,6 +118,7 @@
         var replacements = { // key: shift (back)
             '3-day moving average': 1,
             '7-day moving average': 3,
+            'Daily Cases': null, // just filter negatives; special feature because their y ranging sucks
         };
 
         for (let [key,shift] of Object.entries(replacements))
@@ -125,7 +126,14 @@
             var regex = new RegExp(String.raw`(name: '${key}',\s*(?:\w+: [^,]+,\s*)*?)data: \[([^\]]+)\]`);
             content = content.replace(regex, (match, g1, g2) => {
                 console.log("matching", key, "shift", shift);
-                g2 = g2.split(",").slice(shift).join(",");
+                g2 = g2.split(",");
+
+                if (shift === null)
+                    g2 = g2.map(el => parseInt(el) >= 0 ? el : "0"); // filter negatives
+                else
+                    g2 = g2.slice(shift); // shift left
+
+                g2 = g2.join(",");
                 return g1 + "data: [" + g2 + "]";
             });
         }
